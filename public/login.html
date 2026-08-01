@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion - Ecole Gestion</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-body">
+  <div class="login-box">
+    <div class="login-logo">🎓</div>
+    <h1>Ecole Gestion</h1>
+    <p class="subtitle">FALLSERVICES&amp;SOLUTIONS INFO</p>
+
+    <form id="loginForm">
+      <label>Nom d'utilisateur</label>
+      <input type="text" id="nom_utilisateur" required autofocus>
+
+      <label>Mot de passe</label>
+      <input type="password" id="mot_de_passe" required>
+
+      <button type="submit">Se connecter</button>
+      <p id="errorMsg" class="error-msg"></p>
+    </form>
+
+    <footer>FALLSERVICES&amp;SOLUTIONS INFO — +241 (0) 77 37 86 02</footer>
+  </div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nom_utilisateur = document.getElementById('nom_utilisateur').value;
+  const mot_de_passe = document.getElementById('mot_de_passe').value;
+  const errorMsg = document.getElementById('errorMsg');
+  errorMsg.textContent = '';
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom_utilisateur, mot_de_passe })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errorMsg.textContent = data.error || 'Erreur de connexion';
+      return;
+    }
+    window.location.href = 'inscription.html';
+  } catch (err) {
+    errorMsg.textContent = 'Impossible de contacter le serveur';
+  }
+});
+</script>
+</body>
+</html>

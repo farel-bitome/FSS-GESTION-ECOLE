@@ -1,0 +1,28 @@
+{
+  "name": "ecole-gestion",
+  "version": "1.0.0",
+  "description": "Logiciel de gestion scolaire - Inscription, Paiement, Notes, Bulletins",
+  "main": "main.js",
+  "author": "FALLSERVICES&SOLUTIONS INFO",
+  "scripts": {
+    "start": "electron .",
+    "server": "node server/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "cookie-session": "^2.1.0",
+    "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.fallservices.ecolegestion",
+    "productName": "Ecole Gestion",
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

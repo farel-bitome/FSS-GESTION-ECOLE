@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Inscription - Ecole Gestion</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <h2>🎓 Ecole Gestion</h2>
+    <nav>
+      <a href="inscription.html" class="active">Inscription</a>
+      <a href="paiement.html">Paiement</a>
+      <a href="#">Notes</a>
+      <a href="#">Bulletins</a>
+    </nav>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h3>Nouvelle inscription</h3>
+      <form id="inscriptionForm">
+        <h4>Informations de l'élève</h4>
+        <div class="form-grid">
+          <div><label>Nom *</label><input type="text" id="nom" required></div>
+          <div><label>Prénom *</label><input type="text" id="prenom" required></div>
+          <div><label>Date de naissance</label><input type="date" id="date_naissance"></div>
+          <div><label>Lieu de naissance</label><input type="text" id="lieu_naissance"></div>
+          <div>
+            <label>Sexe</label>
+            <select id="sexe">
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+            </select>
+          </div>
+          <div><label>Classe *</label><select id="classe_id" required></select></div>
+          <div class="full"><label>Adresse</label><input type="text" id="adresse"></div>
+        </div>
+
+        <h4 style="margin-top:20px;">Parent / Tuteur 1</h4>
+        <div class="form-grid">
+          <div><label>Nom complet</label><input type="text" id="p1_nom"></div>
+          <div><label>Lien</label><input type="text" id="p1_lien" placeholder="Père, Mère, Tuteur..."></div>
+          <div><label>Téléphone</label><input type="text" id="p1_telephone"></div>
+          <div><label>Email</label><input type="email" id="p1_email"></div>
+          <div><label>Profession</label><input type="text" id="p1_profession"></div>
+          <div><label>Adresse</label><input type="text" id="p1_adresse"></div>
+        </div>
+
+        <div style="margin-top:24px;">
+          <button type="submit" class="btn-primary">Enregistrer l'inscription</button>
+        </div>
+        <p id="successMsg" class="success-msg"></p>
+        <p id="errorMsg" class="error-msg2"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Élèves inscrits</h3>
+      <table id="listeTable">
+        <thead>
+          <tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Classe</th><th>Date inscription</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+<script src="js/inscription.js"></script>
+</body>
+</html>
