@@ -14,8 +14,8 @@ npm start
 Cela démarre le serveur Express (port 4790) et ouvre la fenêtre Electron sur la page de connexion.
 
 ## Connexion par défaut
-- Utilisateur : `BITOME`
-- Mot de passe : `ChangeMoi_2026!`  (à changer immédiatement, super admin protégé)
+- Utilisateur : `admin`
+- Mot de passe : `Chrisrelamour24@.`
 
 ## Mode réseau (comme FSS-CAISSE)
 

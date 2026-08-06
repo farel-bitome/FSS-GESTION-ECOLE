@@ -6,6 +6,7 @@ const { ensureSuperAdmin, login, requireAuth } = require('./auth');
 
 const inscriptionRoutes = require('./routes/inscription');
 const paiementRoutes = require('./routes/paiement');
+const parametresRoutes = require('./routes/parametres');
 
 const app = express();
 const PORT = process.env.PORT || 4790;
@@ -59,6 +60,7 @@ app.get('/api/moi', (req, res) => {
 // ---- MODULES (proteges par authentification) ----
 app.use('/api/inscription', requireAuth, inscriptionRoutes);
 app.use('/api/paiement', requireAuth, paiementRoutes);
+app.use('/api/parametres', requireAuth, parametresRoutes);
 
 // ---- FICHIERS STATIQUES (frontend) ----
 app.use(express.static(path.join(__dirname, '..', 'public')));

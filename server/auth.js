@@ -14,16 +14,30 @@ function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(hashBuffer, testHash);
 }
 
-// Cree le super admin protege BITOME s'il n'existe pas encore
+// Cree le super admin protege 'admin' s'il n'existe pas encore.
+// Gere aussi la migration si l'ancien compte 'BITOME' avait deja ete cree.
 function ensureSuperAdmin() {
-  const existing = db.prepare(`SELECT * FROM utilisateurs WHERE nom_utilisateur = ?`).get('BITOME');
-  if (!existing) {
-    const hash = hashPassword('ChangeMoi_2026!'); // A changer au premier lancement
+  const NOUVEAU_LOGIN = 'admin';
+  const NOUVEAU_MDP = 'Chrisrelamour24@.';
+
+  const existingAdmin = db.prepare(`SELECT * FROM utilisateurs WHERE nom_utilisateur = ?`).get(NOUVEAU_LOGIN);
+  if (existingAdmin) return;
+
+  const legacy = db.prepare(`SELECT * FROM utilisateurs WHERE nom_utilisateur = ?`).get('BITOME');
+  const hash = hashPassword(NOUVEAU_MDP);
+
+  if (legacy) {
+    // Migration : renomme l'ancien compte protege et met a jour son mot de passe
+    db.prepare(`
+      UPDATE utilisateurs SET nom_utilisateur = ?, mot_de_passe_hash = ? WHERE id = ?
+    `).run(NOUVEAU_LOGIN, hash, legacy.id);
+    console.log('[auth] Compte super admin migre de BITOME vers admin.');
+  } else {
     db.prepare(`
       INSERT INTO utilisateurs (nom_utilisateur, nom_complet, mot_de_passe_hash, role, actif, proteger)
       VALUES (?, ?, ?, 'super_admin', 1, 1)
-    `).run('BITOME', 'Farel Bitome (Super Admin)', hash);
-    console.log('[auth] Super admin BITOME cree. Mot de passe par defaut : ChangeMoi_2026! (a changer)');
+    `).run(NOUVEAU_LOGIN, 'Administrateur', hash);
+    console.log('[auth] Super admin "admin" cree.');
   }
 }
 

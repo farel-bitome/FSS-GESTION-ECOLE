@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Paramètres - Ecole Gestion</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <h2><img src="img/logo.png" alt="Logo" class="topbar-logo"> Ecole Gestion</h2>
+    <nav>
+      <a href="inscription.html">Inscription</a>
+      <a href="paiement.html">Paiement</a>
+      <a href="#">Notes</a>
+      <a href="#">Bulletins</a>
+      <a href="parametres.html" class="active">Paramètres</a>
+      <a href="#" onclick="ouvrirConfigReseau(); return false;" title="Configuration réseau">⚙️ Réseau</a>
+    </nav>
+  </div>
+
+  <div class="container">
+
+    <!-- ANNEES SCOLAIRES -->
+    <div class="card">
+      <h3>Années scolaires</h3>
+      <p class="hint">L'année active est celle utilisée pour les inscriptions. Une seule année peut être active à la fois.</p>
+      <form id="anneeForm" class="form-grid">
+        <div><label>Libellé (ex: 2026-2027) *</label><input type="text" id="a_libelle" required></div>
+        <div><label>Date début</label><input type="date" id="a_debut"></div>
+        <div><label>Date fin</label><input type="date" id="a_fin"></div>
+        <div style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+            <input type="checkbox" id="a_activer" style="width:auto;"> Activer immédiatement
+          </label>
+        </div>
+        <div class="full"><button type="submit" class="btn-primary">Ajouter l'année scolaire</button></div>
+      </form>
+      <p id="anneeMsg" class="error-msg2"></p>
+      <table>
+        <thead><tr><th>Libellé</th><th>Début</th><th>Fin</th><th>Statut</th><th>Action</th></tr></thead>
+        <tbody id="anneesTable"></tbody>
+      </table>
+    </div>
+
+    <!-- CLASSES -->
+    <div class="card">
+      <h3>Classes</h3>
+      <p class="hint">Classes de l'année scolaire active. Change l'année active ci-dessus pour gérer une autre année.</p>
+      <form id="classeForm" class="form-grid">
+        <div><label>Nom de la classe (ex: 6eme A) *</label><input type="text" id="c_nom" required></div>
+        <div><label>Niveau (ex: 6eme) *</label><input type="text" id="c_niveau" required></div>
+        <div class="full"><button type="submit" class="btn-primary">Ajouter la classe</button></div>
+      </form>
+      <p id="classeMsg" class="error-msg2"></p>
+      <table>
+        <thead><tr><th>Nom</th><th>Niveau</th><th>Année</th><th>Action</th></tr></thead>
+        <tbody id="classesTable"></tbody>
+      </table>
+    </div>
+
+    <!-- TARIFS -->
+    <div class="card">
+      <h3>Tarifs par niveau</h3>
+      <p class="hint">Génère automatiquement les échéances de paiement lors d'une inscription dans ce niveau.</p>
+      <form id="tarifForm" class="form-grid">
+        <div><label>Niveau (doit correspondre au niveau des classes) *</label><input type="text" id="t_niveau" required></div>
+        <div><label>Frais d'inscription (FCFA)</label><input type="number" id="t_inscription" value="0"></div>
+        <div><label>Frais de scolarité total (FCFA) *</label><input type="number" id="t_total" required></div>
+        <div><label>Nombre de tranches</label><input type="number" id="t_tranches" value="3" min="1"></div>
+        <div class="full"><button type="submit" class="btn-primary">Ajouter le tarif</button></div>
+      </form>
+      <p id="tarifMsg" class="error-msg2"></p>
+      <table>
+        <thead><tr><th>Niveau</th><th>Inscription</th><th>Scolarité totale</th><th>Tranches</th><th>Action</th></tr></thead>
+        <tbody id="tarifsTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+<script src="js/parametres.js"></script>
+<script>
+function ouvrirConfigReseau() {
+  if (window.electronAPI) {
+    window.electronAPI.openConfigWindow();
+  } else {
+    alert('Configuration réseau disponible uniquement dans l\'application (pas dans un navigateur).');
+  }
+}
+</script>
+</body>
+</html>
