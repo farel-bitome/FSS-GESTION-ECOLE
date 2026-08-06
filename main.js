@@ -13,14 +13,6 @@ function startLocalServer() {
   }
 }
 
-function buildUrl(config) {
-  if (config.mode === 'serveur') {
-    return 'http://localhost:4790/login.html';
-  }
-  const port = config.server_port || '4790';
-  return `http://${config.server_ip}:${port}/login.html`;
-}
-
 function createSetupWindow() {
   setupWindow = new BrowserWindow({
     width: 620,
@@ -39,7 +31,7 @@ function createSetupWindow() {
   setupWindow.on('closed', () => { setupWindow = null; });
 }
 
-function createMainWindow(url) {
+function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -53,8 +45,8 @@ function createMainWindow(url) {
     },
     title: 'Ecole Gestion - FALLSERVICES&SOLUTIONS INFO'
   });
-  mainWindow.loadURL(url);
   mainWindow.on('closed', () => { mainWindow = null; });
+  return mainWindow;
 }
 
 function demarrerSelonConfig() {
@@ -67,9 +59,20 @@ function demarrerSelonConfig() {
 
   if (config.mode === 'serveur') {
     startLocalServer();
-    setTimeout(() => createMainWindow(buildUrl(config)), 500);
+    setTimeout(() => {
+      const win = createMainWindow();
+      win.loadURL('http://localhost:4790/login.html');
+    }, 500);
   } else {
-    createMainWindow(buildUrl(config));
+    // Poste client : passe par l'ecran de connexion qui teste la liaison
+    // reseau avant de rediriger vers la page de login du serveur distant.
+    const win = createMainWindow();
+    win.loadFile(path.join(__dirname, 'public', 'connecting.html'), {
+      query: {
+        ip: config.server_ip || '',
+        port: String(config.server_port || '4790')
+      }
+    });
   }
 }
 

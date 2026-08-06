@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion au serveur - Ecole Gestion</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .connect-body { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, var(--bleu), var(--rouge)); }
+  .connect-box { background:white; padding:36px; border-radius:12px; width:380px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+  .connect-logo { width:70px; margin-bottom:10px; }
+  .spinner {
+    width:36px; height:36px; border:4px solid #eee; border-top-color: var(--rouge);
+    border-radius:50%; margin:18px auto; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-text { font-size:14px; color:#555; }
+  .server-addr { font-size:12px; color:#999; margin-top:4px; }
+  .error-box { display:none; margin-top:14px; }
+  .error-box.visible { display:block; }
+  .error-box p { color: var(--rouge); font-size:13px; }
+  .btn-secondary {
+    background:white; color: var(--bleu); border:1px solid var(--bleu); padding:10px 18px;
+    border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px; margin-top:8px; width:100%;
+  }
+</style>
+</head>
+<body class="connect-body">
+  <div class="connect-box">
+    <img src="img/logo.png" alt="Logo" class="connect-logo">
+    <h2 style="color:var(--bleu); margin:6px 0;">Ecole Gestion</h2>
+
+    <div id="loadingState">
+      <div class="spinner"></div>
+      <div class="status-text">Connexion au serveur...</div>
+      <div class="server-addr" id="serverAddr"></div>
+    </div>
+
+    <div class="error-box" id="errorBox">
+      <p>❌ Impossible de joindre le serveur.</p>
+      <p style="color:#777; font-size:12px;">Vérifie que le poste serveur est allumé, que l'application y est lancée, et que les deux postes sont sur le même réseau.</p>
+      <button class="btn-primary" style="width:100%;" onclick="tenterConnexion()">Réessayer</button>
+      <button class="btn-secondary" onclick="window.electronAPI.openConfigWindow()">Changer de serveur</button>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const ip = params.get('ip');
+const port = params.get('port') || '4790';
+const baseUrl = `http://${ip}:${port}`;
+
+document.getElementById('serverAddr').textContent = `${ip}:${port}`;
+
+async function tenterConnexion() {
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('errorBox').classList.remove('visible');
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`${baseUrl}/api/moi`, { signal: controller.signal }).catch(() => null);
+    clearTimeout(timeout);
+
+    // /api/moi renvoie 401 si le serveur repond mais qu'on n'est pas connecte : c'est un succes de connexion reseau
+    if (res && (res.status === 401 || res.ok)) {
+      window.location.href = `${baseUrl}/login.html`;
+      return;
+    }
+    throw new Error('Serveur injoignable');
+  } catch (err) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorBox').classList.add('visible');
+  }
+}
+
+tenterConnexion();
+</script>
+</body>
+</html>

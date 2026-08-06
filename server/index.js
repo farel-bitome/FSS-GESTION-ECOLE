@@ -13,11 +13,25 @@ const PORT = process.env.PORT || 4790;
 ensureSuperAdmin();
 
 app.use(express.json());
+
+// CORS minimal : necessaire pour que l'ecran "connexion au serveur" (charge en local
+// sur les postes clients) puisse verifier /api/moi avant de rediriger vers le serveur.
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
+
 app.use(cookieSession({
   name: 'ecole_session',
   keys: ['change-this-secret-key-fss'], // A generer aleatoirement en production
   maxAge: 12 * 60 * 60 * 1000 // 12h
 }));
+
+// ---- SANTE (route publique, sert a tester la connexion depuis un poste client) ----
+app.get('/api/health', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.json({ status: 'ok', app: 'ecole-gestion' });
+});
 
 // ---- AUTH ----
 app.post('/api/login', (req, res) => {
