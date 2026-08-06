@@ -1,48 +1,52 @@
-# Ecole Gestion
+name: Update main.yml
 
-Logiciel de gestion scolaire (Electron + Express + SQLite) — Inscription, Paiement, Notes, Bulletins.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-## Installation
-```
-npm install
-```
+jobs:
+  build:
+    runs-on: windows-latest
 
-## Lancer en mode développement
-```
-npm start
-```
-Cela démarre le serveur Express (port 4790) et ouvre la fenêtre Electron sur la page de connexion.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-## Connexion par défaut
-- Utilisateur : `BITOME`
-- Mot de passe : `ChangeMoi_2026!`  (à changer immédiatement, super admin protégé)
+      - name: Setup .NET 7
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "7.0.x"
 
-## Avant la première inscription
-Il faut créer manuellement (ou via un futur écran admin) :
-1. Une **année scolaire active** dans la table `annees_scolaires`
-2. Des **classes** liées à cette année
-3. (Optionnel) Des **tarifs** par niveau pour générer les échéances automatiquement
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
 
-## Modules déjà fonctionnels
-- ✅ Authentification (scrypt, super admin protégé)
-- ✅ Inscription (élève + parent + génération matricule + échéances)
-- ✅ Paiement (encaissement, état de compte, suivi impayés)
-- ⏳ Notes (à venir)
-- ⏳ Bulletins (à venir)
+      - name: Restore dependencies
+        run: dotnet restore
 
-## Structure
-```
-server/
-  db.js            -> schéma SQLite complet
-  auth.js          -> authentification scrypt
-  routes/
-    inscription.js
-    paiement.js
-  index.js         -> serveur Express
-public/
-  login.html
-  inscription.html
-  css/style.css
-  js/inscription.js
-main.js             -> Electron
-```
+      - name: Build (Release)
+        run: dotnet build --no-restore -c Release
+
+      - name: Publish (single-file, self-contained for win-x64)
+        run: dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true -o publish
+
+      - name: Zip publish folder
+        shell: pwsh
+        run: |
+          if (Test-Path publish) {
+            Compress-Archive -Path publish\* -DestinationPath publish.zip -Force
+          } else {
+            Write-Error "Publish folder not found"
+            exit 1
+          }
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-windows
+          path: publish.zip
