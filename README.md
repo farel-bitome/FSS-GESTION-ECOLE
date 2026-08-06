@@ -17,6 +17,17 @@ Cela démarre le serveur Express (port 4790) et ouvre la fenêtre Electron sur l
 - Utilisateur : `BITOME`
 - Mot de passe : `ChangeMoi_2026!`  (à changer immédiatement, super admin protégé)
 
+## Mode réseau (comme FSS-CAISSE)
+
+Au premier lancement, l'application demande de choisir un mode :
+
+- **Poste serveur** : héberge la base SQLite et le serveur Express (port 4790). C'est ce poste que les autres utiliseront.
+- **Poste client** : ne stocke rien en local, se connecte directement à l'IP du poste serveur sur le réseau local (LAN `192.168.x.x`).
+
+La configuration est modifiable à tout moment via le bouton **⚙️ Réseau** dans la barre de navigation de l'application.
+
+**Important** : sur le poste serveur, autorise le port **4790** dans le pare-feu Windows (Entrant) pour que les autres postes du réseau puissent s'y connecter.
+
 ## Avant la première inscription
 Il faut créer manuellement (ou via un futur écran admin) :
 1. Une **année scolaire active** dans la table `annees_scolaires`

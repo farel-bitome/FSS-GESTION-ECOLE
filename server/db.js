@@ -1,8 +1,20 @@
 const path = require('path');
+const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const dbPath = path.join(__dirname, '..', 'data', 'ecole.db');
-require('fs').mkdirSync(path.join(__dirname, '..', 'data'), { recursive: true });
+// Determine un dossier de donnees inscriptible :
+// - Dans l'app Electron packagee : dossier userData (ex: %APPDATA%/ecole-gestion)
+// - En dehors d'Electron (npm run server) : dossier ../data a cote du code
+let dataDir;
+try {
+  const { app } = require('electron');
+  dataDir = path.join(app.getPath('userData'), 'data');
+} catch (e) {
+  dataDir = path.join(__dirname, '..', 'data');
+}
+
+fs.mkdirSync(dataDir, { recursive: true });
+const dbPath = path.join(dataDir, 'ecole.db');
 
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');

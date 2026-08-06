@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Configuration réseau - Ecole Gestion</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .setup-body { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, var(--bleu), var(--rouge)); }
+  .setup-box { background:white; padding:32px; border-radius:12px; width:460px; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+  .setup-box h1 { color: var(--bleu); font-size:20px; margin-top:0; text-align:center; }
+  .mode-choice { display:flex; gap:12px; margin:18px 0; }
+  .mode-card {
+    flex:1; border:2px solid #ddd; border-radius:10px; padding:14px; cursor:pointer; text-align:center; font-size:13px;
+  }
+  .mode-card.selected { border-color: var(--rouge); background:#fdf2f0; }
+  .mode-card h4 { margin:6px 0 4px; color:var(--bleu); font-size:14px; }
+  .client-fields { display:none; margin-top:10px; }
+  .client-fields.visible { display:block; }
+  .lan-list { background:var(--gris-clair); border-radius:8px; padding:10px 14px; font-size:12px; margin-top:14px; }
+  .lan-list div { padding:2px 0; }
+  .lan-tag { display:inline-block; padding:1px 6px; border-radius:8px; font-size:10px; font-weight:bold; margin-right:6px; }
+  .lan-tag.LAN { background:#dbeafe; color:var(--bleu); }
+</style>
+</head>
+<body class="setup-body">
+  <div class="setup-box">
+    <h1>Configuration réseau — Ecole Gestion</h1>
+
+    <div class="mode-choice">
+      <div class="mode-card" id="card-serveur" onclick="choisirMode('serveur')">
+        <div style="font-size:24px;">🖥️</div>
+        <h4>Poste serveur</h4>
+        <div>Ce poste héberge la base de données. Les autres postes s'y connectent.</div>
+      </div>
+      <div class="mode-card" id="card-client" onclick="choisirMode('client')">
+        <div style="font-size:24px;">💻</div>
+        <h4>Poste client</h4>
+        <div>Ce poste se connecte à un serveur existant sur le réseau.</div>
+      </div>
+    </div>
+
+    <div class="client-fields" id="clientFields">
+      <label>Adresse IP du poste serveur</label>
+      <input type="text" id="server_ip" placeholder="ex: 192.168.1.10">
+      <label style="margin-top:8px;">Port</label>
+      <input type="text" id="server_port" value="4790">
+    </div>
+
+    <div class="lan-list" id="lanList">
+      <strong>Adresses de ce poste :</strong>
+      <div id="lanAddresses">Chargement...</div>
+    </div>
+
+    <button class="btn-primary" style="width:100%; margin-top:20px;" onclick="enregistrer()">Enregistrer et démarrer</button>
+    <p id="msg" style="text-align:center; font-size:13px; margin-top:10px;"></p>
+  </div>
+
+<script>
+let modeChoisi = null;
+
+function choisirMode(mode) {
+  modeChoisi = mode;
+  document.getElementById('card-serveur').classList.toggle('selected', mode === 'serveur');
+  document.getElementById('card-client').classList.toggle('selected', mode === 'client');
+  document.getElementById('clientFields').classList.toggle('visible', mode === 'client');
+}
+
+async function chargerAdresses() {
+  const el = document.getElementById('lanAddresses');
+  if (!window.electronAPI) { el.textContent = 'Non disponible hors application.'; return; }
+  const adresses = await window.electronAPI.getLanAddresses();
+  if (!adresses.length) { el.textContent = 'Aucune adresse réseau détectée.'; return; }
+  el.innerHTML = adresses.map(a => `<div><span class="lan-tag ${a.type}">${a.type}</span>${a.address}</div>`).join('');
+}
+
+async function chargerConfigExistante() {
+  if (!window.electronAPI) return;
+  const config = await window.electronAPI.getConfig();
+  if (config && config.mode) {
+    choisirMode(config.mode);
+    if (config.server_ip) document.getElementById('server_ip').value = config.server_ip;
+    if (config.server_port) document.getElementById('server_port').value = config.server_port;
+  }
+}
+
+async function enregistrer() {
+  const msg = document.getElementById('msg');
+  if (!modeChoisi) { msg.textContent = 'Choisis un mode (serveur ou client).'; msg.style.color = 'var(--rouge)'; return; }
+
+  const config = { mode: modeChoisi };
+  if (modeChoisi === 'client') {
+    const ip = document.getElementById('server_ip').value.trim();
+    const port = document.getElementById('server_port').value.trim() || '4790';
+    if (!ip) { msg.textContent = 'Indique l\'adresse IP du poste serveur.'; msg.style.color = 'var(--rouge)'; return; }
+    config.server_ip = ip;
+    config.server_port = port;
+  }
+
+  await window.electronAPI.saveConfig(config);
+  msg.style.color = 'var(--ok)';
+  msg.textContent = 'Configuration enregistrée. Redémarrage...';
+  setTimeout(() => window.electronAPI.restartApp(), 800);
+}
+
+chargerAdresses();
+chargerConfigExistante();
+</script>
+</body>
+</html>

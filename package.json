@@ -21,8 +21,17 @@
   "build": {
     "appId": "com.fallservices.ecolegestion",
     "productName": "Ecole Gestion",
+    "icon": "build/icon.ico",
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**"
+    ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     }
   }
 }
