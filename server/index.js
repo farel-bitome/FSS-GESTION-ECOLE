@@ -2,17 +2,19 @@ const express = require('express');
 const path = require('path');
 const cookieSession = require('cookie-session');
 const db = require('./db');
-const { ensureSuperAdmin, ensureAdminAccount, login, requireAuth } = require('./auth');
+const { resetComptesInitial, ensureSuperAdmin, ensureAdminAccount, login, requireAuth } = require('./auth');
 
 const inscriptionRoutes = require('./routes/inscription');
 const paiementRoutes = require('./routes/paiement');
 const parametresRoutes = require('./routes/parametres');
 const utilisateursRoutes = require('./routes/utilisateurs');
 const rolesRoutes = require('./routes/roles');
+const demoRoutes = require('./routes/demo');
 
 const app = express();
 const PORT = process.env.PORT || 4790;
 
+resetComptesInitial();
 ensureSuperAdmin();
 ensureAdminAccount();
 
@@ -66,6 +68,7 @@ app.use('/api/paiement', requireAuth, paiementRoutes);
 app.use('/api/parametres', requireAuth, parametresRoutes);
 app.use('/api/utilisateurs', requireAuth, utilisateursRoutes);
 app.use('/api/roles', requireAuth, rolesRoutes);
+app.use('/api/demo', requireAuth, demoRoutes);
 
 // ---- FICHIERS STATIQUES (frontend) ----
 app.use(express.static(path.join(__dirname, '..', 'public')));

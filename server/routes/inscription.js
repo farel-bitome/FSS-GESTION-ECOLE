@@ -145,4 +145,29 @@ router.get('/eleve/:id', (req, res) => {
   res.json(eleve);
 });
 
+// Supprime un eleve et toutes ses donnees liees (inscriptions, echeances, paiements, documents)
+router.delete('/eleve/:id', (req, res) => {
+  const eleve = db.prepare(`SELECT * FROM eleves WHERE id = ?`).get(req.params.id);
+  if (!eleve) return res.status(404).json({ error: 'Eleve introuvable' });
+
+  const transaction = db.transaction(() => {
+    const inscriptions = db.prepare(`SELECT id FROM inscriptions WHERE eleve_id = ?`).all(req.params.id);
+    for (const insc of inscriptions) {
+      db.prepare(`DELETE FROM paiements WHERE inscription_id = ?`).run(insc.id);
+      db.prepare(`DELETE FROM echeances WHERE inscription_id = ?`).run(insc.id);
+    }
+    db.prepare(`DELETE FROM inscriptions WHERE eleve_id = ?`).run(req.params.id);
+    db.prepare(`DELETE FROM documents_eleve WHERE eleve_id = ?`).run(req.params.id);
+    db.prepare(`DELETE FROM bulletins WHERE eleve_id = ?`).run(req.params.id);
+    db.prepare(`DELETE FROM eleves WHERE id = ?`).run(req.params.id);
+  });
+
+  try {
+    transaction();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur lors de la suppression', details: err.message });
+  }
+});
+
 module.exports = router;

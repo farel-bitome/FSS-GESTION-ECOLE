@@ -21,7 +21,14 @@ async function chargerListe() {
   const eleves = await res.json();
   const tbody = document.querySelector('#listeTable tbody');
   tbody.innerHTML = '';
-  eleves.forEach(e => {
+
+  for (const e of eleves) {
+    const etatRes = await fetch(`/api/paiement/etat-compte/${e.inscription_id}`);
+    const etat = await etatRes.json();
+    let badge = '<span class="badge impayee">Impayé</span>';
+    if (etat.solde <= 0 && etat.totalDu > 0) badge = '<span class="badge payee">Soldé</span>';
+    else if (etat.totalPaye > 0) badge = '<span class="badge partielle">Partiel</span>';
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${e.matricule}</td>
@@ -29,9 +36,19 @@ async function chargerListe() {
       <td>${e.prenom}</td>
       <td>${e.classe_nom}</td>
       <td>${new Date(e.date_inscription).toLocaleDateString('fr-FR')}</td>
+      <td>${badge}</td>
+      <td><button class="btn-secondary-sm" onclick="supprimerEleve(${e.id}, '${e.nom} ${e.prenom}')">Supprimer</button></td>
     `;
     tbody.appendChild(tr);
-  });
+  }
+}
+
+async function supprimerEleve(id, nomComplet) {
+  if (!confirm(`Supprimer définitivement ${nomComplet} et toutes ses données (inscription, paiements) ?`)) return;
+  const res = await fetch(`/api/inscription/eleve/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (!res.ok) { alert(data.error); return; }
+  chargerListe();
 }
 
 document.getElementById('inscriptionForm').addEventListener('submit', async (e) => {

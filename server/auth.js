@@ -14,32 +14,50 @@ function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(hashBuffer, testHash);
 }
 
-// Cree (ou migre) le compte super admin protege : BITOME / Chrisrelamour24@.
-// - Si BITOME existe deja : ne touche a rien.
-// - Si un ancien super admin existe sous un autre nom (ex: 'admin' cree par une
-//   version precedente) : le renomme en BITOME et applique le nouveau mot de passe.
-// - Sinon : cree le compte BITOME.
+// ------------------------------------------------------------------
+// RESET UNIQUE : supprime tous les comptes existants (une seule fois,
+// suivi via la table migrations_appliquees pour ne jamais le refaire
+// automatiquement par la suite - les comptes crees ensuite par
+// l'utilisateur ne seront donc jamais effaces au demarrage).
+// ------------------------------------------------------------------
+function resetComptesInitial() {
+  const NOM_MIGRATION = 'reset_comptes_2026_08_v1';
+  const deja = db.prepare(`SELECT nom FROM migrations_appliquees WHERE nom = ?`).get(NOM_MIGRATION);
+  if (deja) return;
+
+  db.prepare(`DELETE FROM utilisateurs`).run();
+  db.prepare(`INSERT INTO migrations_appliquees (nom) VALUES (?)`).run(NOM_MIGRATION);
+  console.log('[auth] Reset unique : tous les comptes existants ont ete supprimes.');
+}
+
+// Cree le super admin protege BITOME / Chrisrelamour24@. (jamais supprimable, meme via l'UI)
 function ensureSuperAdmin() {
   const LOGIN = 'BITOME';
   const MDP = 'Chrisrelamour24@.';
 
-  const existant = db.prepare(`SELECT * FROM utilisateurs WHERE nom_utilisateur = ?`).get(LOGIN);
+  const existant = db.prepare(`SELECT id FROM utilisateurs WHERE nom_utilisateur = ?`).get(LOGIN);
   if (existant) return;
 
-  const ancienSuperAdmin = db.prepare(`SELECT * FROM utilisateurs WHERE role = 'super_admin' AND proteger = 1`).get();
   const hash = hashPassword(MDP);
+  db.prepare(`
+    INSERT INTO utilisateurs (nom_utilisateur, nom_complet, mot_de_passe_hash, role, actif, proteger)
+    VALUES (?, ?, ?, 'super_admin', 1, 1)
+  `).run(LOGIN, 'Farel Bitome (Super Admin)', hash);
+  console.log(`[auth] Super admin "${LOGIN}" cree (protege).`);
+}
 
-  if (ancienSuperAdmin) {
-    db.prepare(`UPDATE utilisateurs SET nom_utilisateur = ?, mot_de_passe_hash = ? WHERE id = ?`)
-      .run(LOGIN, hash, ancienSuperAdmin.id);
-    console.log(`[auth] Compte super admin migre vers "${LOGIN}".`);
-  } else {
-    db.prepare(`
-      INSERT INTO utilisateurs (nom_utilisateur, nom_complet, mot_de_passe_hash, role, actif, proteger)
-      VALUES (?, ?, ?, 'super_admin', 1, 1)
-    `).run(LOGIN, 'Farel Bitome (Super Admin)', hash);
-    console.log(`[auth] Super admin "${LOGIN}" cree.`);
-  }
+// Cree le compte admin protege admin / admin (jamais supprimable, meme via l'UI)
+function ensureAdminAccount() {
+  const LOGIN = 'admin';
+  const existant = db.prepare(`SELECT id FROM utilisateurs WHERE nom_utilisateur = ?`).get(LOGIN);
+  if (existant) return;
+
+  const hash = hashPassword('admin');
+  db.prepare(`
+    INSERT INTO utilisateurs (nom_utilisateur, nom_complet, mot_de_passe_hash, role, actif, proteger)
+    VALUES (?, ?, ?, 'admin', 1, 1)
+  `).run(LOGIN, 'Administrateur', hash);
+  console.log(`[auth] Compte "${LOGIN}" cree (protege).`);
 }
 
 function login(nomUtilisateur, motDePasse) {
@@ -66,19 +84,8 @@ function requireRole(...roles) {
   };
 }
 
-// Cree un compte admin simple (non protege) : admin / admin.
-// Sert de compte de depart en plus du super admin BITOME.
-function ensureAdminAccount() {
-  const LOGIN = 'admin';
-  const existant = db.prepare(`SELECT id FROM utilisateurs WHERE nom_utilisateur = ?`).get(LOGIN);
-  if (existant) return;
-
-  const hash = hashPassword('admin');
-  db.prepare(`
-    INSERT INTO utilisateurs (nom_utilisateur, nom_complet, mot_de_passe_hash, role, actif, proteger)
-    VALUES (?, ?, ?, 'admin', 1, 0)
-  `).run(LOGIN, 'Administrateur', hash);
-  console.log('[auth] Compte "admin" (role admin, mot de passe "admin") cree.');
-}
-
-module.exports = { hashPassword, verifyPassword, ensureSuperAdmin, ensureAdminAccount, login, requireAuth, requireRole };
+module.exports = {
+  hashPassword, verifyPassword,
+  resetComptesInitial, ensureSuperAdmin, ensureAdminAccount,
+  login, requireAuth, requireRole
+};

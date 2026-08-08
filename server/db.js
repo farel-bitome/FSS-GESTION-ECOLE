@@ -22,6 +22,14 @@ db.pragma('foreign_keys = ON');
 
 db.exec(`
 -- =====================
+-- MIGRATIONS (suivi des operations ponctuelles executees une seule fois)
+-- =====================
+CREATE TABLE IF NOT EXISTS migrations_appliquees (
+  nom TEXT PRIMARY KEY,
+  date_application TEXT DEFAULT (datetime('now'))
+);
+
+-- =====================
 -- UTILISATEURS & ROLES
 -- =====================
 CREATE TABLE IF NOT EXISTS utilisateurs (

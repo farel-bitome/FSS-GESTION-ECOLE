@@ -270,3 +270,23 @@ document.getElementById('utilisateurForm').addEventListener('submit', async (e) 
 });
 
 chargerUtilisateurs();
+
+// ---------- DEMONSTRATION ----------
+async function genererDemo() {
+  const msg = document.getElementById('demoMsg');
+  msg.textContent = 'Génération en cours...';
+  msg.style.color = '#888';
+
+  const res = await fetch('/api/demo/generer', { method: 'POST' });
+  const data = await res.json();
+  if (!res.ok) {
+    msg.style.color = 'var(--rouge)';
+    msg.textContent = data.error;
+    return;
+  }
+  msg.style.color = 'var(--ok)';
+  msg.textContent = `Démo générée : ${data.eleves.length} élèves créés sur l'année DEMO 2026-2027.`;
+  chargerAnnees();
+  chargerClasses();
+  chargerTarifs();
+}
