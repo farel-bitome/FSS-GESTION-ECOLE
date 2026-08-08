@@ -76,6 +76,43 @@
       </table>
     </div>
 
+    <!-- ROLES -->
+    <div class="card">
+      <h3>Rôles</h3>
+      <p class="hint">Crée les rôles dont tu as besoin. Le rôle "super_admin" est réservé au système.</p>
+      <form id="roleForm" class="form-grid">
+        <div><label>Nom du rôle *</label><input type="text" id="r_nom" placeholder="ex: directeur, caissier..." required></div>
+        <div><label>Description</label><input type="text" id="r_description"></div>
+        <div class="full"><button type="submit" class="btn-primary">Créer le rôle</button></div>
+      </form>
+      <p id="roleMsg" class="error-msg2"></p>
+      <table>
+        <thead><tr><th>Rôle</th><th>Description</th><th>Type</th><th>Action</th></tr></thead>
+        <tbody id="rolesTable"></tbody>
+      </table>
+    </div>
+
+    <!-- UTILISATEURS -->
+    <div class="card">
+      <h3>Utilisateurs</h3>
+      <p class="hint">Les comptes marqués "Protégé" ne peuvent pas être supprimés ni désactivés.</p>
+      <form id="utilisateurForm" class="form-grid">
+        <div><label>Nom d'utilisateur *</label><input type="text" id="u_login" required></div>
+        <div><label>Nom complet *</label><input type="text" id="u_nom" required></div>
+        <div><label>Mot de passe *</label><input type="password" id="u_password" required></div>
+        <div>
+          <label>Rôle *</label>
+          <select id="u_role" required></select>
+        </div>
+        <div class="full"><button type="submit" class="btn-primary">Créer le compte</button></div>
+      </form>
+      <p id="utilisateurMsg" class="error-msg2"></p>
+      <table>
+        <thead><tr><th>Utilisateur</th><th>Nom complet</th><th>Rôle</th><th>Statut</th><th>Action</th></tr></thead>
+        <tbody id="utilisateursTable"></tbody>
+      </table>
+    </div>
+
   </div>
 
 <script src="js/parametres.js"></script>

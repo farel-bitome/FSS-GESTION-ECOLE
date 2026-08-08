@@ -29,10 +29,18 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
   nom_utilisateur TEXT UNIQUE NOT NULL,
   nom_complet TEXT NOT NULL,
   mot_de_passe_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK(role IN ('super_admin','admin','secretariat','comptable','enseignant')),
+  role TEXT NOT NULL,
   actif INTEGER DEFAULT 1,
   proteger INTEGER DEFAULT 0, -- 1 pour le super admin BITOME, non supprimable
   date_creation TEXT DEFAULT (datetime('now'))
+);
+
+-- Roles personnalisables (crees et geres par l'utilisateur depuis l'application)
+CREATE TABLE IF NOT EXISTS roles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  nom TEXT UNIQUE NOT NULL,
+  description TEXT,
+  systeme INTEGER DEFAULT 0 -- 1 = role reserve (super_admin), non supprimable
 );
 
 -- =====================
@@ -266,5 +274,47 @@ CREATE TABLE IF NOT EXISTS permissions (
   FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
 );
 `);
+
+// ---------------------------------------------------------
+// MIGRATION : retire l'ancienne contrainte CHECK figee sur
+// utilisateurs.role pour permettre des roles personnalises,
+// tout en preservant les comptes/donnees existants.
+// ---------------------------------------------------------
+try {
+  const tableInfo = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='utilisateurs'`).get();
+  if (tableInfo && tableInfo.sql.includes('CHECK(role IN')) {
+    db.exec(`
+      ALTER TABLE utilisateurs RENAME TO utilisateurs_old;
+      CREATE TABLE utilisateurs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nom_utilisateur TEXT UNIQUE NOT NULL,
+        nom_complet TEXT NOT NULL,
+        mot_de_passe_hash TEXT NOT NULL,
+        role TEXT NOT NULL,
+        actif INTEGER DEFAULT 1,
+        proteger INTEGER DEFAULT 0,
+        date_creation TEXT DEFAULT (datetime('now'))
+      );
+      INSERT INTO utilisateurs (id, nom_utilisateur, nom_complet, mot_de_passe_hash, role, actif, proteger, date_creation)
+        SELECT id, nom_utilisateur, nom_complet, mot_de_passe_hash, role, actif, proteger, date_creation FROM utilisateurs_old;
+      DROP TABLE utilisateurs_old;
+    `);
+    console.log('[db] Migration : contrainte de role figee retiree (roles desormais libres).');
+  }
+} catch (err) {
+  console.error('[db] Echec migration roles libres :', err.message);
+}
+
+// Seed des roles de depart (modifiables/supprimables sauf super_admin)
+const rolesDefaut = [
+  { nom: 'super_admin', description: 'Super administrateur (protege)', systeme: 1 },
+  { nom: 'admin', description: 'Administrateur', systeme: 0 },
+  { nom: 'secretariat', description: 'Secrétariat', systeme: 0 },
+  { nom: 'comptable', description: 'Comptable', systeme: 0 },
+  { nom: 'enseignant', description: 'Enseignant', systeme: 0 }
+];
+const insererRole = db.prepare(`INSERT OR IGNORE INTO roles (nom, description, systeme) VALUES (?, ?, ?)`);
+for (const r of rolesDefaut) insererRole.run(r.nom, r.description, r.systeme);
+
 
 module.exports = db;

@@ -153,3 +153,120 @@ verifierConnexion();
 chargerAnnees();
 chargerClasses();
 chargerTarifs();
+
+// ---------- ROLES ----------
+async function chargerRoles() {
+  const res = await fetch('/api/roles');
+  const roles = await res.json();
+
+  const tbody = document.getElementById('rolesTable');
+  tbody.innerHTML = '';
+  roles.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.nom}</td>
+      <td>${r.description || '-'}</td>
+      <td>${r.systeme ? '<span class="badge partielle">Système</span>' : '<span class="badge payee">Personnalisé</span>'}</td>
+      <td>${r.systeme ? '' : `<button class="btn-secondary-sm" onclick="supprimerRole(${r.id})">Supprimer</button>`}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Remplit aussi le select du formulaire utilisateur (hors super_admin, reserve au systeme)
+  const select = document.getElementById('u_role');
+  const valeurActuelle = select.value;
+  select.innerHTML = '';
+  roles.filter(r => r.nom !== 'super_admin').forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.nom;
+    opt.textContent = r.description ? `${r.nom} (${r.description})` : r.nom;
+    select.appendChild(opt);
+  });
+  if (valeurActuelle) select.value = valeurActuelle;
+}
+
+async function supprimerRole(id) {
+  const res = await fetch(`/api/roles/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (!res.ok) { alert(data.error); return; }
+  chargerRoles();
+}
+
+document.getElementById('roleForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('roleMsg');
+  msg.textContent = '';
+  const payload = {
+    nom: document.getElementById('r_nom').value.trim(),
+    description: document.getElementById('r_description').value.trim()
+  };
+  const res = await fetch('/api/roles', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) { msg.textContent = data.error; return; }
+  document.getElementById('roleForm').reset();
+  chargerRoles();
+});
+
+chargerRoles();
+
+// ---------- UTILISATEURS ----------
+async function chargerUtilisateurs() {
+  const res = await fetch('/api/utilisateurs');
+  const utilisateurs = await res.json();
+  const tbody = document.getElementById('utilisateursTable');
+  tbody.innerHTML = '';
+  utilisateurs.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${u.nom_utilisateur}</td>
+      <td>${u.nom_complet}</td>
+      <td>${u.role}</td>
+      <td>${u.proteger ? '<span class="badge partielle">Protégé</span>' : (u.actif ? '<span class="badge payee">Actif</span>' : '<span class="badge impayee">Désactivé</span>')}</td>
+      <td>
+        ${u.proteger ? '' : `
+          <button class="btn-secondary-sm" onclick="toggleActif(${u.id})">${u.actif ? 'Désactiver' : 'Activer'}</button>
+          <button class="btn-secondary-sm" onclick="supprimerUtilisateur(${u.id})">Supprimer</button>
+        `}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function toggleActif(id) {
+  const res = await fetch(`/api/utilisateurs/${id}/toggle-actif`, { method: 'POST' });
+  const data = await res.json();
+  if (!res.ok) { alert(data.error); return; }
+  chargerUtilisateurs();
+}
+
+async function supprimerUtilisateur(id) {
+  if (!confirm('Supprimer ce compte ?')) return;
+  const res = await fetch(`/api/utilisateurs/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (!res.ok) { alert(data.error); return; }
+  chargerUtilisateurs();
+}
+
+document.getElementById('utilisateurForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('utilisateurMsg');
+  msg.textContent = '';
+  const payload = {
+    nom_utilisateur: document.getElementById('u_login').value,
+    nom_complet: document.getElementById('u_nom').value,
+    mot_de_passe: document.getElementById('u_password').value,
+    role: document.getElementById('u_role').value
+  };
+  const res = await fetch('/api/utilisateurs', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) { msg.textContent = data.error; return; }
+  document.getElementById('utilisateurForm').reset();
+  chargerUtilisateurs();
+});
+
+chargerUtilisateurs();
